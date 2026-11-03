@@ -11,7 +11,7 @@ interface ContactSectionProps {
 export function ContactSection({ config, onOpenChat, onLeadCreated }: ContactSectionProps) {
   const [formData, setFormData] = useState({
     customerName: '',
-    email: '',
+    email: 'demo@example.com',
     phone: '',
     projectType: config.services[0].title,
     projectDescription: '',
@@ -28,8 +28,8 @@ export function ContactSection({ config, onOpenChat, onLeadCreated }: ContactSec
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
-    if (!formData.customerName || !formData.email || !formData.projectDescription) {
-      setErrorMsg('Please complete all required fields (Name, Email, Project Description).');
+    if (!formData.customerName || !formData.projectDescription) {
+      setErrorMsg('Please provide a fictional name and project description.');
       return;
     }
 
