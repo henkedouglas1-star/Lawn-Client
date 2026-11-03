@@ -565,7 +565,7 @@ Rules:
   } catch (error: any) {
     console.error('Gemini chat error:', error);
     res.status(500).json({
-      reply: "I apologize, I encountered a temporary connection issue. Please feel free to use our estimate form or call us directly at (415) 890-4200.",
+      reply: "The AI assistant is temporarily unavailable in this concept demo. Please try again later or use the fictional demo inquiry form. No appointment or real inquiry has been submitted.",
       extractedData: {},
       qualification: { status: 'Pending Review' },
       error: error.message
