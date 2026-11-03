@@ -63,6 +63,9 @@ export function AiChatModal({ isOpen, onClose, config, initialMessage, onLeadCre
       });
 
       const data = await res.json();
+      if (!res.ok) {
+        console.warn('AI demo request failed', { status: res.status });
+      }
       
       const assistantMsg: ChatMessage = {
         id: `asst-${Date.now()}`,
@@ -155,9 +158,9 @@ export function AiChatModal({ isOpen, onClose, config, initialMessage, onLeadCre
           <div className="bg-emerald-50 border-b border-emerald-200 px-4 py-2.5 text-xs text-emerald-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Project lead successfully qualified and saved to secure CRM system.</span>
+              <span>Fictional project inquiry added to the demo inbox for this session only.</span>
             </div>
-            <span className="font-mono bg-emerald-200/60 px-2 py-0.5 rounded text-[10px]">Saved</span>
+            <span className="font-mono bg-emerald-200/60 px-2 py-0.5 rounded text-[10px]">Demo only</span>
           </div>
         )}
 
