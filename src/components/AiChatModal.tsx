@@ -77,8 +77,8 @@ export function AiChatModal({ isOpen, onClose, config, initialMessage, onLeadCre
         const merged = { ...extractedLeadData, ...data.extractedData };
         setExtractedLeadData(merged);
 
-        // If we have minimum required lead info (name, email, service), auto-save lead
-        if (merged.customerName && merged.email && !leadSaved) {
+        // Generate a fictional demo inquiry once project type and city are available.
+        if (merged.projectType && merged.projectCity && !leadSaved) {
           saveLeadToBackend(merged);
         }
       }
@@ -103,8 +103,8 @@ export function AiChatModal({ isOpen, onClose, config, initialMessage, onLeadCre
     const now = new Date().toISOString();
     const lead: Lead = {
       leadId: 'demo-chat-' + Date.now(), businessId: config.businessId,
-      customerName: data.customerName || 'Demo Visitor',
-      email: data.email || '', phone: data.phone || '',
+      customerName: 'Demo Visitor',
+      email: '', phone: '',
       projectType: data.projectType || config.services[0].title,
       projectDescription: data.projectDescription || 'Discussed with AI concierge',
       projectCity: data.projectCity || 'Not specified',
