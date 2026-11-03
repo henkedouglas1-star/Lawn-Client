@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, ClipboardList, Shield, Calendar, CheckCircle2, AlertCircle, RefreshCw, LogOut, ExternalLink, Plus, Briefcase, FileText, Check, Clock } from 'lucide-react';
 import { BusinessConfig, Lead, Job, JobStatus } from '../types';
 import { initAuth, googleSignIn, getAccessToken, logout, fetchCalendarEvents, createConsultationEvent, CalendarEvent } from '../services/calendarAuth';
-import { User } from 'firebase/auth';
+import { User, getAuth, onAuthStateChanged } from 'firebase/auth';
 
 interface AdminLeadDashboardProps {
   isOpen: boolean;
@@ -11,7 +11,15 @@ interface AdminLeadDashboardProps {
   leads: Lead[];
 }
 
-export function AdminLeadDashboard({ isOpen, onClose, config, leads }: AdminLeadDashboardProps) {
+export function AdminLeadDashboard({ isOpen, onClose, config }: AdminLeadDashboardProps) {
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [staffUser, setStaffUser] = useState<User | null>(null);
+  const [accessError, setAccessError] = useState('');
+  const staffHeaders = async (): Promise<Record<string, string>> => {
+    const current = getAuth().currentUser;
+    if (!current) throw new Error('Sign in with an authorized staff account.');
+    return { Authorization: `Bearer ${await current.getIdToken()}` };
+  };
   const [activeSubTab, setActiveSubTab] = useState<'overview' | 'leads' | 'jobs' | 'calendar' | 'events' | 'config'>('overview');
   
   // Data stores
@@ -41,7 +49,11 @@ export function AdminLeadDashboard({ isOpen, onClose, config, leads }: AdminLead
 
   useEffect(() => {
     if (isOpen) {
-      fetchAllData();
+      const unsubscribeStaff = onAuthStateChanged(getAuth(), current => {
+        setStaffUser(current);
+        if (current) fetchAllData();
+        else { setLeads([]); setJobs([]); setEventLogs([]); }
+      });
       const unsubscribe = initAuth(
         (authUser, token) => {
           setUser(authUser);
@@ -55,24 +67,26 @@ export function AdminLeadDashboard({ isOpen, onClose, config, leads }: AdminLead
           setNeedsAuth(true);
         }
       );
-      return () => unsubscribe();
+      return () => { unsubscribe(); unsubscribeStaff(); };
     }
   }, [isOpen]);
 
   const fetchAllData = async () => {
     try {
-      const [jobsRes, eventsRes] = await Promise.all([
-        fetch('/api/jobs'),
-        fetch('/api/events')
+      const headers = await staffHeaders();
+      const [leadsRes, jobsRes, eventsRes] = await Promise.all([
+        fetch('/api/leads', { headers }),
+        fetch('/api/jobs', { headers }),
+        fetch('/api/events', { headers })
       ]);
-
-      const jobsData = await jobsRes.json();
-      const eventsData = await eventsRes.json();
-
-      setJobs(jobsData);
-      setEventLogs(eventsData);
+      if (![leadsRes, jobsRes, eventsRes].every(res => res.ok)) throw new Error('Staff access denied or session expired');
+      setLeads(await leadsRes.json());
+      setJobs(await jobsRes.json());
+      setEventLogs(await eventsRes.json());
+      setAccessError('');
     } catch (e) {
-      console.error('Failed to fetch management data:', e);
+      setAccessError(e instanceof Error ? e.message : 'Unable to load staff data');
+      setLeads([]); setJobs([]); setEventLogs([]);
     }
   };
 
@@ -84,7 +98,7 @@ export function AdminLeadDashboard({ isOpen, onClose, config, leads }: AdminLead
     try {
       const res = await fetch('/api/jobs', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(await staffHeaders()) },
         body: JSON.stringify({
           leadId: lead.leadId,
           customerName: lead.customerName,
@@ -110,7 +124,7 @@ export function AdminLeadDashboard({ isOpen, onClose, config, leads }: AdminLead
     try {
       const res = await fetch(`/api/jobs/${jobId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(await staffHeaders()) },
         body: JSON.stringify({ jobStatus: newStatus })
       });
       if (res.ok) {
@@ -131,6 +145,7 @@ export function AdminLeadDashboard({ isOpen, onClose, config, leads }: AdminLead
         setAccessToken(result.accessToken);
         setNeedsAuth(false);
         loadCalendar(result.accessToken);
+        fetchAllData();
       }
     } catch (err: any) {
       setCalendarError(err.message || 'Google sign-in failed');
@@ -145,6 +160,7 @@ export function AdminLeadDashboard({ isOpen, onClose, config, leads }: AdminLead
     setAccessToken(null);
     setNeedsAuth(true);
     setCalendarEvents([]);
+    setLeads([]); setJobs([]); setEventLogs([]);
   };
 
   const loadCalendar = async (token: string) => {
@@ -200,6 +216,7 @@ export function AdminLeadDashboard({ isOpen, onClose, config, leads }: AdminLead
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
       <div className="bg-white w-full max-w-6xl rounded-3xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col h-[90vh]">
+        {accessError && <div role="alert" className="bg-red-50 text-red-800 px-6 py-3 text-sm">{accessError}</div>}
         {/* Header */}
         <div className="bg-[#1E3A2F] text-white p-6 flex items-center justify-between border-b border-[#2C4A3E]">
           <div className="flex items-center gap-3">
