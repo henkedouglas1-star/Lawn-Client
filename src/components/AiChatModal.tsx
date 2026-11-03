@@ -138,7 +138,7 @@ export function AiChatModal({ isOpen, onClose, config, initialMessage, onLeadCre
                 <h3 className="font-serif font-bold text-lg text-white">{config.aiReceptionist.name}</h3>
                 <span className="bg-[#D4AF37] text-[#1E3A2F] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">AI Demo</span>
               </div>
-              <p className="text-xs text-[#D4AF37]">{config.aiReceptionist.title} • Aravat Landscaping</p>
+              <p className="text-xs text-[#D4AF37]">Independent AI concept demo - Use fictional details only</p>
             </div>
           </div>
 
