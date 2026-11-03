@@ -1,0 +1,6 @@
+{
+  "name": "Aravat Landscaping Platform",
+  "description": "AI-powered customer acquisition, consultation booking, and lead management platform for Aravat Landscaping Inc.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
