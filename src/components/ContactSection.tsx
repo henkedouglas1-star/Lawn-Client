@@ -59,7 +59,7 @@ export function ContactSection({ config, onOpenChat, onLeadCreated }: ContactSec
                 Initiate Project
               </span>
               <h2 className="font-serif text-3xl sm:text-5xl font-bold tracking-tight text-[#1E3A2F] mt-4">
-                Explore a Sample Consultation Request
+                Try a Sample Consultation Request
               </h2>
               <p className="text-gray-600 text-base mt-4 leading-relaxed">
                 Connect directly with our principal design team or use our AI project assistant for instant preliminary scope analysis.
@@ -133,7 +133,7 @@ export function ContactSection({ config, onOpenChat, onLeadCreated }: ContactSec
                 <div className="space-y-2">
                   <h3 className="font-serif text-3xl font-bold text-[#1E3A2F]">Demo Inquiry Created</h3>
                   <p className="text-gray-600 text-sm max-w-md mx-auto">
-                    Thank you, <span className="font-semibold text-[#1E3A2F]">{successLead.customerName}</span>. Your project inquiry has been securely saved to our lead management system (ID: <span className="font-mono text-xs text-[#D4AF37]">{successLead.leadId}</span>).
+                    Thank you, <span className="font-semibold text-[#1E3A2F]">{successLead.customerName}</span>. Your fictional inquiry is displayed only in this browser session (demo ID: <span className="font-mono text-xs text-[#D4AF37]">{successLead.leadId}</span>).
                   </p>
                 </div>
                 <div className="bg-white p-6 rounded-2xl border border-gray-200 text-left space-y-3 max-w-md mx-auto text-xs text-gray-700 shadow-sm">
