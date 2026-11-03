@@ -15,6 +15,17 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(express.json());
 
+// Sales demonstration: never accept live inquiries or expose stored leads.
+app.use('/api/leads', (req, res, next) => {
+  if (req.method === 'POST') return res.status(403).json({ error: 'This independent concept demo does not accept real inquiries.' });
+  if (req.method === 'GET') return res.status(403).json({ error: 'Lead records are unavailable in demo mode.' });
+  next();
+});
+app.use(['/api/jobs', '/api/events'], (_req, res) => {
+  res.status(403).json({ error: 'Operations data is unavailable in demo mode.' });
+});
+
+
 const PORT = process.env.PORT || 3000;
 
 // Initialize Firebase App & Firestore on Server if credentials exist
@@ -504,12 +515,12 @@ Your goal is to converse gracefully with potential clients, answer questions abo
 3. Project description / vision.
 4. Approximate budget range.
 5. Desired timeline.
-6. Customer name, email, and phone number with consent.
+6. This is an independent demonstration. Do not request or collect real names, email addresses, phone numbers, or addresses. Use fictional placeholders if needed. Never claim to book an actual consultation or send a real inquiry.
 
 Rules:
 - Never invent pricing or guarantee availability.
 - Be extremely professional, sophisticated, and warm.
-- When you have collected enough info (service, location, name, email), evaluate qualification and invite them to schedule a consultation.
+- When you have project type, approximate city, scope, and timeline, explain how a real business could follow up after deployment. Do not request real contact information or claim an appointment is booked.
 - Return your answer in JSON format with three keys:
   1. "reply" (string message to user)
   2. "extractedData" (JSON object with newly discovered fields: customerName, email, phone, projectType, projectDescription, projectCity, projectZip, budgetRange, desiredTimeline)

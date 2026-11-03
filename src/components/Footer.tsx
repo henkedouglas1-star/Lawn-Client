@@ -79,11 +79,11 @@ export function Footer({ config, onOpenAdmin }: FooterProps) {
 
         <div className="pt-8 border-t border-[#2C4A3E] flex flex-col sm:flex-row items-center justify-between text-xs text-gray-400 gap-4">
           <div>
-            &copy; {new Date().getFullYear()} Aravat Landscaping Inc. All rights reserved.
+            Independent concept demonstration for Aravat Landscaping Inc. - not an official business website.
           </div>
           <div className="flex items-center gap-6">
             <button onClick={onOpenAdmin} className="hover:text-[#D4AF37] transition-colors cursor-pointer underline">
-              Customer Management Dashboard
+              View Demo Inquiry Inbox
             </button>
             <span className="text-gray-600">|</span>
             <span>San Francisco Bay Area Landscaping</span>

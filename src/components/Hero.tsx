@@ -71,7 +71,7 @@ export function Hero({ config, onOpenChat, onNavigateContact }: HeroProps) {
               className="cursor-pointer bg-[#2C4A3E]/90 hover:bg-[#3A5A4E] text-white border border-[#D4AF37]/50 px-8 py-4 rounded-xl font-semibold text-base shadow-lg flex items-center justify-center gap-3 transition-all"
             >
               <Sparkles className="w-5 h-5 text-[#D4AF37]" />
-              <span>Chat with AI Concierge</span>
+              <span>Plan Your Project With AI</span>
             </button>
           </div>
 
@@ -132,7 +132,7 @@ export function Hero({ config, onOpenChat, onNavigateContact }: HeroProps) {
               className="mt-6 w-full bg-[#D4AF37] hover:bg-[#E2BE50] text-[#1E3A2F] py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Start Interactive Project Chat</span>
+              <span>Try the AI Project Concierge</span>
             </button>
           </div>
         </div>

@@ -75,10 +75,10 @@ export function PortfolioSection({ config, onOpenChatWithService }: PortfolioSec
             Portfolio Showcase
           </span>
           <h2 className="font-serif text-3xl sm:text-5xl font-bold tracking-tight text-[#1E3A2F]">
-            Award-Winning Bay Area Transformations
+            Outdoor Project Inspiration
           </h2>
           <p className="text-gray-600 text-base sm:text-lg">
-            Explore illustrative examples of our bespoke residential landscapes across San Francisco, Marin, Silicon Valley, and the East Bay.
+            Illustrative design inspiration using stock photography. These images and project descriptions are not verified Aravat Landscaping work.
           </p>
 
           {/* Category Filter Pills */}
@@ -135,7 +135,7 @@ export function PortfolioSection({ config, onOpenChatWithService }: PortfolioSec
                 </p>
 
                 <div className="pt-4 border-t border-gray-200/60 flex items-center justify-between">
-                  <span className="text-xs text-gray-500 font-medium">Private Estate Concept</span>
+                  <span className="text-xs text-gray-500 font-medium">Illustrative concept - Stock image</span>
                   <button
                     onClick={() => onOpenChatWithService(project.category)}
                     className="cursor-pointer text-xs font-bold text-[#1E3A2F] hover:text-[#D4AF37] flex items-center gap-1 transition-colors"

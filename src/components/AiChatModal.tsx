@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Send, Sparkles, User, Bot, CheckCircle2, Calendar } from 'lucide-react';
 import { BusinessConfig, ChatMessage, Lead } from '../types';
-import { saveLeadToFirestore } from '../services/firebaseDb';
 
 interface AiChatModalProps {
   isOpen: boolean;
@@ -78,8 +77,8 @@ export function AiChatModal({ isOpen, onClose, config, initialMessage, onLeadCre
         const merged = { ...extractedLeadData, ...data.extractedData };
         setExtractedLeadData(merged);
 
-        // If we have minimum required lead info (name, email, service), auto-save lead
-        if (merged.customerName && merged.email && !leadSaved) {
+        // Generate a fictional demo inquiry once project type and city are available.
+        if (merged.projectType && merged.projectCity && !leadSaved) {
           saveLeadToBackend(merged);
         }
       }
@@ -90,7 +89,7 @@ export function AiChatModal({ isOpen, onClose, config, initialMessage, onLeadCre
         {
           id: `err-${Date.now()}`,
           sender: 'assistant',
-          text: "I'm having a brief connection issue. Please feel free to use our estimate form or call us directly at (415) 890-4200.",
+          text: "I'm having a brief connection issue. Please use the demo estimate form instead.",
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
@@ -100,43 +99,24 @@ export function AiChatModal({ isOpen, onClose, config, initialMessage, onLeadCre
   };
 
   const saveLeadToBackend = async (data: Partial<Lead>) => {
-    try {
-      const leadPayload = {
-        businessId: config.businessId,
-        customerName: data.customerName || 'AI Chat Visitor',
-        email: data.email || 'visitor@example.com',
-        phone: data.phone || '(Not provided)',
-        projectType: data.projectType || config.services[0].title,
-        projectDescription: data.projectDescription || 'Discussed via AI Assistant',
-        projectCity: data.projectCity || 'San Francisco',
-        projectZip: data.projectZip || '94111',
-        budgetRange: data.budgetRange || '$50,000 - $100,000',
-        desiredTimeline: data.desiredTimeline || 'Flexible',
-        source: 'AI Assistant',
-        qualificationStatus: 'Qualified' as const,
-        bookingStatus: 'Not Booked' as const,
-        jobStatus: 'Estimate Sent' as const,
-        paymentStatus: 'Pending' as const,
-        commissionStatus: 'Not Payable' as const
-      };
-
-      const [res] = await Promise.all([
-        fetch('/api/leads', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(leadPayload)
-        }),
-        saveLeadToFirestore(leadPayload).catch(err => console.error('Firestore chat save error:', err))
-      ]);
-
-      if (res.ok) {
-        const savedLead: Lead = await res.json();
-        setLeadSaved(true);
-        onLeadCreated(savedLead);
-      }
-    } catch (e) {
-      console.error('Error auto-saving lead from chat:', e);
-    }
+    // Keep demonstration inquiries in the current browser session only.
+    const now = new Date().toISOString();
+    const lead: Lead = {
+      leadId: 'demo-chat-' + Date.now(), businessId: config.businessId,
+      customerName: 'Demo Visitor',
+      email: '', phone: '',
+      projectType: data.projectType || config.services[0].title,
+      projectDescription: data.projectDescription || 'Discussed with AI concierge',
+      projectCity: data.projectCity || 'Not specified',
+      projectZip: data.projectZip || '', budgetRange: data.budgetRange || 'Not specified',
+      desiredTimeline: data.desiredTimeline || 'Flexible',
+      source: 'Demo AI concierge', qualificationStatus: 'Pending Review',
+      bookingStatus: 'Not Booked', jobStatus: 'Estimate Sent',
+      paymentStatus: 'Pending', commissionStatus: 'Not Payable',
+      createdAt: now, updatedAt: now, consentTimestamp: ''
+    };
+    setLeadSaved(true);
+    onLeadCreated(lead);
   };
 
   return (
@@ -156,9 +136,9 @@ export function AiChatModal({ isOpen, onClose, config, initialMessage, onLeadCre
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-serif font-bold text-lg text-white">{config.aiReceptionist.name}</h3>
-                <span className="bg-[#D4AF37] text-[#1E3A2F] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">AI Concierge</span>
+                <span className="bg-[#D4AF37] text-[#1E3A2F] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">AI Demo</span>
               </div>
-              <p className="text-xs text-[#D4AF37]">{config.aiReceptionist.title} • Aravat Landscaping</p>
+              <p className="text-xs text-[#D4AF37]">Independent AI concept demo - Use fictional details only</p>
             </div>
           </div>
 
