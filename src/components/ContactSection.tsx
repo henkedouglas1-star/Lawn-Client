@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Send, CheckCircle2, AlertCircle, Phone, Mail, MapPin, Sparkles } from 'lucide-react';
 import { BusinessConfig, Lead } from '../types';
-import { saveLeadToFirestore } from '../services/firebaseDb';
 
 interface ContactSectionProps {
   config: BusinessConfig;
@@ -16,9 +15,9 @@ export function ContactSection({ config, onOpenChat, onLeadCreated }: ContactSec
     phone: '',
     projectType: config.services[0].title,
     projectDescription: '',
-    projectCity: 'San Francisco',
-    projectZip: '94111',
-    budgetRange: '$50,000 - $100,000',
+    projectCity: '',
+    projectZip: '',
+    budgetRange: 'Not specified',
     desiredTimeline: 'Next 3-6 months'
   });
 
@@ -35,40 +34,18 @@ export function ContactSection({ config, onOpenChat, onLeadCreated }: ContactSec
     }
 
     setSubmitting(true);
-    try {
-      // Save to Firestore and backend API
-      const leadPayload = {
-        ...formData,
-        businessId: config.businessId,
-        source: 'Website Contact Form',
-        qualificationStatus: 'Qualified' as const,
-        bookingStatus: 'Not Booked' as const,
-        jobStatus: 'Estimate Sent' as const,
-        paymentStatus: 'Pending' as const,
-        commissionStatus: 'Not Payable' as const
-      };
-
-      const [res] = await Promise.all([
-        fetch('/api/leads', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(leadPayload)
-        }),
-        saveLeadToFirestore(leadPayload).catch(err => console.error('Firestore sync error:', err))
-      ]);
-
-      if (!res.ok) {
-        throw new Error('Failed to submit lead to secure backend.');
-      }
-
-      const newLead: Lead = await res.json();
-      setSuccessLead(newLead);
-      onLeadCreated(newLead);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Submission error. Please try again.');
-    } finally {
-      setSubmitting(false);
-    }
+    // Concept demo: all form data stays in memory in this browser tab.
+    const now = new Date().toISOString();
+    const demoLead: Lead = {
+      ...formData, leadId: 'demo-' + Date.now(), businessId: config.businessId,
+      source: 'Demo estimate form', qualificationStatus: 'Pending Review',
+      bookingStatus: 'Not Booked', jobStatus: 'Estimate Sent',
+      paymentStatus: 'Pending', commissionStatus: 'Not Payable',
+      createdAt: now, updatedAt: now, consentTimestamp: ''
+    };
+    onLeadCreated(demoLead);
+    setSuccessLead(demoLead);
+    setSubmitting(false);
   };
 
   return (
@@ -82,7 +59,7 @@ export function ContactSection({ config, onOpenChat, onLeadCreated }: ContactSec
                 Initiate Project
               </span>
               <h2 className="font-serif text-3xl sm:text-5xl font-bold tracking-tight text-[#1E3A2F] mt-4">
-                Schedule Your Onsite Consultation
+                Explore a Sample Consultation Request
               </h2>
               <p className="text-gray-600 text-base mt-4 leading-relaxed">
                 Connect directly with our principal design team or use our AI project assistant for instant preliminary scope analysis.
@@ -154,7 +131,7 @@ export function ContactSection({ config, onOpenChat, onLeadCreated }: ContactSec
                   <CheckCircle2 className="w-10 h-10" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="font-serif text-3xl font-bold text-[#1E3A2F]">Estimate Request Received</h3>
+                  <h3 className="font-serif text-3xl font-bold text-[#1E3A2F]">Demo Inquiry Created</h3>
                   <p className="text-gray-600 text-sm max-w-md mx-auto">
                     Thank you, <span className="font-semibold text-[#1E3A2F]">{successLead.customerName}</span>. Your project inquiry has been securely saved to our lead management system (ID: <span className="font-mono text-xs text-[#D4AF37]">{successLead.leadId}</span>).
                   </p>
@@ -297,7 +274,7 @@ export function ContactSection({ config, onOpenChat, onLeadCreated }: ContactSec
                 </div>
 
                 <div className="text-[11px] text-gray-500">
-                  By submitting this form, you consent to Aravat Landscaping Inc. (and this private demonstration platform) storing your inquiry for preliminary consultation and estimate scheduling.
+                  Concept demonstration only. Use fictional information. This form does not send information to Aravat Landscaping or a database.
                 </div>
 
                 <button
@@ -306,10 +283,10 @@ export function ContactSection({ config, onOpenChat, onLeadCreated }: ContactSec
                   className="w-full bg-[#1E3A2F] hover:bg-[#2C4A3E] text-white py-4 rounded-xl font-bold text-sm shadow-xl flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
                 >
                   {submitting ? (
-                    <span>Processing Secure Submission...</span>
+                    <span>Preparing Demo Inquiry...</span>
                   ) : (
                     <>
-                      <span>Submit Estimate Request</span>
+                      <span>Create Demo Inquiry</span>
                       <Send className="w-4 h-4" />
                     </>
                   )}
