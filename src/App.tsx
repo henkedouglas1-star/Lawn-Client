@@ -10,7 +10,6 @@ import { AiChatModal } from './components/AiChatModal';
 import { AdminLeadDashboard } from './components/AdminLeadDashboard';
 import { Footer } from './components/Footer';
 import { BusinessConfig, Lead } from './types';
-import { fetchLeadsFromFirestore } from './services/firebaseDb';
 import { Sparkles, Shield, Phone, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
@@ -25,20 +24,10 @@ export default function App() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [configRes, leadsRes, firestoreLeads] = await Promise.all([
-          fetch('/api/config'),
-          fetch('/api/leads'),
-          fetchLeadsFromFirestore().catch(() => [])
-        ]);
+        const configRes = await fetch('/api/config');
+        if (!configRes.ok) throw new Error('Unable to load business configuration');
         const configData = await configRes.json();
-        const leadsData = await leadsRes.json();
-        
-        // Merge unique leads by email/leadId
-        const combinedLeads = [...firestoreLeads, ...leadsData];
-        const uniqueLeads = Array.from(new Map(combinedLeads.map(l => [l.leadId || l.email, l])).values());
-
         setConfig(configData);
-        setLeads(uniqueLeads);
       } catch (err) {
         console.error('Failed to load application data:', err);
       } finally {
