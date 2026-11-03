@@ -1,4 +1,6 @@
 import express from 'express';
+import { initializeApp as initializeAdminApp, getApps as getAdminApps, applicationDefault } from 'firebase-admin/app';
+import { getAuth as getAdminAuth } from 'firebase-admin/auth';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import dotenv from 'dotenv';
@@ -352,12 +354,39 @@ let jobsStore = [
   }
 ];
 
+
+// ARV-001: Server-enforced staff access. Google Calendar OAuth is NOT an admin credential.
+// Set ARAVAT_ADMIN_EMAILS to a comma-separated list of explicitly approved staff emails.
+// Cloud Run should use its service account / Application Default Credentials.
+const approvedAdminEmails = new Set((process.env.ARAVAT_ADMIN_EMAILS || '')
+  .split(',').map(email => email.trim().toLowerCase()).filter(Boolean));
+const adminFirebaseApp = getAdminApps().length ? getAdminApps()[0] : initializeAdminApp({
+  credential: applicationDefault(),
+  projectId: firebaseConfig.projectId
+});
+const requireStaff: express.RequestHandler = async (req, res, next) => {
+  const authorization = req.get('authorization') || '';
+  const token = /^Bearer (\S+)$/i.exec(authorization)?.[1];
+  if (!token) { res.status(401).json({ error: 'Authentication required' }); return; }
+  try {
+    const decoded = await getAdminAuth(adminFirebaseApp).verifyIdToken(token, true);
+    const email = decoded.email?.toLowerCase();
+    if (!decoded.email_verified || !email || !approvedAdminEmails.has(email)) {
+      res.status(403).json({ error: 'Staff access denied' }); return;
+    }
+    next();
+  } catch (error) {
+    console.warn('Rejected invalid or revoked admin token');
+    res.status(401).json({ error: 'Invalid or expired authentication' });
+  }
+};
+
 // API Routes
 app.get('/api/config', (req, res) => {
   res.json(businessConfig);
 });
 
-app.get('/api/leads', (req, res) => {
+app.get('/api/leads', requireStaff, (req, res) => {
   res.json(leadsStore);
 });
 
@@ -409,15 +438,15 @@ app.post('/api/leads', async (req, res) => {
   res.status(201).json(newLead);
 });
 
-app.get('/api/events', (req, res) => {
+app.get('/api/events', requireStaff, (req, res) => {
   res.json(eventLogsStore);
 });
 
-app.get('/api/jobs', (req, res) => {
+app.get('/api/jobs', requireStaff, (req, res) => {
   res.json(jobsStore);
 });
 
-app.post('/api/jobs', (req, res) => {
+app.post('/api/jobs', requireStaff, (req, res) => {
   const body = req.body;
   if (!body.leadId || !body.customerName || !body.serviceType) {
     return res.status(400).json({ error: 'Missing required job fields' });
@@ -447,7 +476,7 @@ app.post('/api/jobs', (req, res) => {
   res.status(201).json(newJob);
 });
 
-app.put('/api/jobs/:jobId', (req, res) => {
+app.put('/api/jobs/:jobId', requireStaff, (req, res) => {
   const { jobId } = req.params;
   const updates = req.body;
   const idx = jobsStore.findIndex(j => j.jobId === jobId);
