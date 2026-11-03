@@ -95,7 +95,7 @@ export function Navbar({ config, onOpenChat, onOpenAdmin, activeTab, setActiveTa
           <button
             onClick={onOpenAdmin}
             className="cursor-pointer bg-[#2C4A3E] hover:bg-[#3A5A4E] text-[#D4AF37] p-2.5 rounded-lg border border-[#D4AF37]/40 transition-colors"
-            title="Customer Management Dashboard"
+            title="View Demo Inquiry Inbox"
           >
             <ClipboardList className="w-4 h-4" />
           </button>
@@ -158,7 +158,7 @@ export function Navbar({ config, onOpenChat, onOpenAdmin, activeTab, setActiveTa
               className="w-full bg-[#2C4A3E] text-[#D4AF37] py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 border border-[#D4AF37]/30"
             >
               <ClipboardList className="w-4 h-4" />
-              <span>Customer Management Dashboard</span>
+              <span>View Demo Inquiry Inbox</span>
             </button>
             <a
               href={`tel:${config.contactInfo.phone}`}
