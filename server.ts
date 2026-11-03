@@ -15,6 +15,17 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(express.json());
 
+// Sales demonstration: never accept live inquiries or expose stored leads.
+app.use('/api/leads', (req, res, next) => {
+  if (req.method === 'POST') return res.status(403).json({ error: 'This independent concept demo does not accept real inquiries.' });
+  if (req.method === 'GET') return res.status(403).json({ error: 'Lead records are unavailable in demo mode.' });
+  next();
+});
+app.use(['/api/jobs', '/api/events'], (_req, res) => {
+  res.status(403).json({ error: 'Operations data is unavailable in demo mode.' });
+});
+
+
 const PORT = process.env.PORT || 3000;
 
 // Initialize Firebase App & Firestore on Server if credentials exist
