@@ -10,42 +10,48 @@ import { AiChatModal } from './components/AiChatModal';
 import { AdminLeadDashboard } from './components/AdminLeadDashboard';
 import { Footer } from './components/Footer';
 import { BusinessConfig, Lead } from './types';
-import { fetchLeadsFromFirestore } from './services/firebaseDb';
-import { Sparkles, Shield, Phone, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Shield, Phone, ArrowRight, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function App() {
   const [config, setConfig] = useState<BusinessConfig | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('home');
   const [chatOpen, setChatOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [initialChatMessage, setInitialChatMessage] = useState<string>('');
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [configRes, leadsRes, firestoreLeads] = await Promise.all([
-          fetch('/api/config'),
-          fetch('/api/leads'),
-          fetchLeadsFromFirestore().catch(() => [])
-        ]);
-        const configData = await configRes.json();
-        const leadsData = await leadsRes.json();
-        
-        // Merge unique leads by email/leadId
-        const combinedLeads = [...firestoreLeads, ...leadsData];
-        const uniqueLeads = Array.from(new Map(combinedLeads.map(l => [l.leadId || l.email, l])).values());
+  const loadConfig = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-        setConfig(configData);
-        setLeads(uniqueLeads);
-      } catch (err) {
-        console.error('Failed to load application data:', err);
-      } finally {
-        setLoading(false);
+      const res = await fetch('/api/config', { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        throw new Error(`Server returned status ${res.status}`);
       }
+
+      const data = await res.json();
+      if (!data || !data.businessName) {
+        throw new Error('Invalid configuration payload received from server');
+      }
+
+      setConfig(data);
+    } catch (err: any) {
+      console.error('Failed to load application configuration:', err);
+      setError(err.message || 'Unable to connect to Aravat Landscaping services.');
+    } finally {
+      setLoading(false);
     }
-    loadData();
+  };
+
+  useEffect(() => {
+    loadConfig();
   }, []);
 
   const handleLeadCreated = (newLead: Lead) => {
@@ -57,11 +63,32 @@ export default function App() {
     setChatOpen(true);
   };
 
-  if (loading || !config) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#1E3A2F] flex flex-col items-center justify-center text-white space-y-4">
         <div className="w-12 h-12 rounded-full border-4 border-[#D4AF37] border-t-transparent animate-spin" />
         <p className="font-serif text-lg tracking-wide">Loading Aravat Landscaping Platform...</p>
+      </div>
+    );
+  }
+
+  if (error || !config) {
+    return (
+      <div className="min-h-screen bg-[#1E3A2F] flex flex-col items-center justify-center text-white p-6 text-center space-y-6">
+        <div className="w-16 h-16 rounded-2xl bg-amber-500/20 text-[#D4AF37] flex items-center justify-center">
+          <AlertCircle className="w-8 h-8" />
+        </div>
+        <div className="space-y-2 max-w-md">
+          <h2 className="font-serif text-2xl font-bold">Connection Notice</h2>
+          <p className="text-gray-300 text-sm">{error || 'Unable to load application configuration.'}</p>
+        </div>
+        <button
+          onClick={loadConfig}
+          className="cursor-pointer bg-[#D4AF37] hover:bg-[#E2BE50] text-[#1E3A2F] px-6 py-3 rounded-xl font-bold text-sm shadow-lg flex items-center gap-2 transition-transform transform hover:scale-105"
+        >
+          <RefreshCw className="w-4 h-4" />
+          <span>Retry Connection</span>
+        </button>
       </div>
     );
   }
@@ -135,10 +162,10 @@ export default function App() {
                 About Aravat Landscaping
               </span>
               <h1 className="font-serif text-4xl sm:text-6xl font-bold text-[#1E3A2F]">
-                Crafting Outdoor Excellence Since 2008
+                Crafting Outdoor Excellence Since 2010
               </h1>
               <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-                Led by principal landscape architects and master craftsmen, Aravat Landscaping Inc. delivers high-end residential outdoor architecture across the San Francisco Bay Area.
+                Headquartered in Palo Alto, California, Aravat Landscaping Inc. delivers high-end residential outdoor architecture and custom construction across the San Francisco Bay Area.
               </p>
             </div>
 
@@ -151,11 +178,11 @@ export default function App() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 text-sm font-medium text-gray-800">
                     <CheckCircle2 className="w-5 h-5 text-[#D4AF37]" />
-                    <span>Licensed California Landscape Contractors (C-27)</span>
+                    <span>Licensed California Landscape Contractors</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm font-medium text-gray-800">
                     <CheckCircle2 className="w-5 h-5 text-[#D4AF37]" />
-                    <span>Comprehensive 5-Year Structural Warranty</span>
+                    <span>Comprehensive Structural Warranties</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm font-medium text-gray-800">
                     <CheckCircle2 className="w-5 h-5 text-[#D4AF37]" />

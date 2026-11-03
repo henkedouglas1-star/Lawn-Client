@@ -176,54 +176,20 @@ const businessConfig = {
   domain: 'aravatlandscaping.com'
 };
 
-// In-memory Leads Database (with initial demo records)
-let leadsStore = [
-  {
-    leadId: 'lead-101',
-    businessId: 'aravat-demo',
-    source: 'AI Assistant',
-    customerName: 'Jonathan Sterling',
-    email: 'j.sterling@paloaltoventures.example',
-    phone: '(650) 442-8910',
-    projectType: 'Resort-Grade Outdoor Living & Kitchens',
-    projectDescription: 'Complete backyard transformation with a modern pergola, built-in gas kitchen, and bluestone patio in Palo Alto.',
-    projectCity: 'Palo Alto',
-    projectZip: '94301',
-    budgetRange: '$100,000 - $150,000',
-    desiredTimeline: 'Next 3-6 months',
-    qualificationStatus: 'Qualified',
-    bookingStatus: 'Confirmed',
-    jobStatus: 'In Design',
-    paymentStatus: 'Deposit Paid',
-    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    updatedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
-    consentTimestamp: new Date(Date.now() - 86400000 * 2).toISOString()
-  },
-  {
-    leadId: 'lead-102',
-    businessId: 'aravat-demo',
-    source: 'Website Contact Form',
-    customerName: 'Dr. Elena Rostova',
-    email: 'elena.rostova@marinmed.example',
-    phone: '(415) 332-9011',
-    projectType: 'Landscape Architecture & Master Planning',
-    projectDescription: 'Hillside terracing and drought-tolerant native planting for a modernist home in Mill Valley.',
-    projectCity: 'Mill Valley',
-    projectZip: '94941',
-    budgetRange: '$60,000 - $100,000',
-    desiredTimeline: 'As soon as possible',
-    qualificationStatus: 'Qualified',
-    bookingStatus: 'Slot Requested',
-    jobStatus: 'Estimate Sent',
-    paymentStatus: 'Pending',
-    createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-    updatedAt: new Date(Date.now() - 86400000 * 4).toISOString(),
-    consentTimestamp: new Date(Date.now() - 86400000 * 5).toISOString()
-  }
-];
+// In-memory Leads Database (Clean & Secure)
+let leadsStore: any[] = [];
 
 // Event Tracking Log Store
 let eventLogsStore: any[] = [];
+
+function verifyAdminAuth(req: express.Request, res: express.Response): boolean {
+  const token = req.headers['authorization'] || req.headers['x-admin-token'];
+  if (!token) {
+    res.status(401).json({ error: 'Unauthorized: Administrator authentication required' });
+    return false;
+  }
+  return true;
+}
 
 function logEvent(businessId: string, leadId: string, eventType: string, details: any) {
   const evt = {
@@ -312,45 +278,8 @@ async function sendTransactionalEmail(templateName: string, recipientEmail: stri
   return { success: true, provider: 'mock-simulated' };
 }
 
-// Jobs Store for Aravat Client Projects
-let jobsStore = [
-  {
-    jobId: 'job-201',
-    businessId: 'aravat-demo',
-    leadId: 'lead-101',
-    customerName: 'Jonathan Sterling',
-    customerEmail: 'j.sterling@paloaltoventures.example',
-    serviceType: 'Resort-Grade Outdoor Living & Kitchens',
-    jobDescription: 'Complete backyard transformation with a modern pergola and bluestone patio in Palo Alto.',
-    jobStatus: 'In Progress',
-    quotedAmountCents: 12000000,
-    finalInvoiceAmountCents: 12000000,
-    verifiedPaidAmountCents: 5000000,
-    currency: 'USD',
-    completionDate: null,
-    paymentVerificationStatus: 'Deposit Paid',
-    createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-    updatedAt: new Date(Date.now() - 86400000 * 2).toISOString()
-  },
-  {
-    jobId: 'job-202',
-    businessId: 'aravat-demo',
-    leadId: 'lead-102',
-    customerName: 'Dr. Elena Rostova',
-    customerEmail: 'elena.rostova@marinmed.example',
-    serviceType: 'Landscape Architecture & Master Planning',
-    jobDescription: 'Hillside terracing and drought-tolerant native planting for Mill Valley property.',
-    jobStatus: 'Estimate Sent',
-    quotedAmountCents: 8000000,
-    finalInvoiceAmountCents: 8000000,
-    verifiedPaidAmountCents: 0,
-    currency: 'USD',
-    completionDate: null,
-    paymentVerificationStatus: 'Pending',
-    createdAt: new Date(Date.now() - 86400000 * 4).toISOString(),
-    updatedAt: new Date(Date.now() - 86400000 * 3).toISOString()
-  }
-];
+// Jobs Store for Aravat Client Projects (Clean & Secure)
+let jobsStore: any[] = [];
 
 // API Routes
 app.get('/api/config', (req, res) => {
@@ -358,6 +287,7 @@ app.get('/api/config', (req, res) => {
 });
 
 app.get('/api/leads', (req, res) => {
+  if (!verifyAdminAuth(req, res)) return;
   res.json(leadsStore);
 });
 
@@ -365,6 +295,12 @@ app.post('/api/leads', async (req, res) => {
   const body = req.body;
   if (!body.customerName || !body.email || !body.projectType) {
     return res.status(400).json({ error: 'Missing required lead fields (customerName, email, projectType)' });
+  }
+
+  // Duplicate submission protection within last 60 seconds
+  const recentDuplicate = leadsStore.find(l => l.email === body.email && (Date.now() - new Date(l.createdAt).getTime() < 60000));
+  if (recentDuplicate) {
+    return res.status(200).json(recentDuplicate);
   }
 
   const qualification = evaluateLeadQualification(body);
@@ -410,14 +346,17 @@ app.post('/api/leads', async (req, res) => {
 });
 
 app.get('/api/events', (req, res) => {
+  if (!verifyAdminAuth(req, res)) return;
   res.json(eventLogsStore);
 });
 
 app.get('/api/jobs', (req, res) => {
+  if (!verifyAdminAuth(req, res)) return;
   res.json(jobsStore);
 });
 
 app.post('/api/jobs', (req, res) => {
+  if (!verifyAdminAuth(req, res)) return;
   const body = req.body;
   if (!body.leadId || !body.customerName || !body.serviceType) {
     return res.status(400).json({ error: 'Missing required job fields' });
@@ -448,6 +387,7 @@ app.post('/api/jobs', (req, res) => {
 });
 
 app.put('/api/jobs/:jobId', (req, res) => {
+  if (!verifyAdminAuth(req, res)) return;
   const { jobId } = req.params;
   const updates = req.body;
   const idx = jobsStore.findIndex(j => j.jobId === jobId);

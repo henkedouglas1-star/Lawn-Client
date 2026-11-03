@@ -62,15 +62,15 @@ export function AdminLeadDashboard({ isOpen, onClose, config, leads }: AdminLead
   const fetchAllData = async () => {
     try {
       const [jobsRes, eventsRes] = await Promise.all([
-        fetch('/api/jobs'),
-        fetch('/api/events')
+        fetch('/api/jobs', { headers: { 'x-admin-token': 'aravat-admin-verified' } }),
+        fetch('/api/events', { headers: { 'x-admin-token': 'aravat-admin-verified' } })
       ]);
 
       const jobsData = await jobsRes.json();
       const eventsData = await eventsRes.json();
 
-      setJobs(jobsData);
-      setEventLogs(eventsData);
+      setJobs(Array.isArray(jobsData) ? jobsData : []);
+      setEventLogs(Array.isArray(eventsData) ? eventsData : []);
     } catch (e) {
       console.error('Failed to fetch management data:', e);
     }
@@ -84,7 +84,10 @@ export function AdminLeadDashboard({ isOpen, onClose, config, leads }: AdminLead
     try {
       const res = await fetch('/api/jobs', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-token': 'aravat-admin-verified'
+        },
         body: JSON.stringify({
           leadId: lead.leadId,
           customerName: lead.customerName,
@@ -110,7 +113,10 @@ export function AdminLeadDashboard({ isOpen, onClose, config, leads }: AdminLead
     try {
       const res = await fetch(`/api/jobs/${jobId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-token': 'aravat-admin-verified'
+        },
         body: JSON.stringify({ jobStatus: newStatus })
       });
       if (res.ok) {
